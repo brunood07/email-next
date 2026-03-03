@@ -27,17 +27,63 @@ describe("templateEngine", () => {
     expect(out).toContain("ANA");
   });
 
+  it("format money correctly for comma and dot decimal inputs", () => {
+    const commaDecimal = renderTemplate("{{money(valor)}}", {
+      valor: "87,05",
+    });
+    expect(commaDecimal).toBe("R$\u00a087,05");
+
+    const dotDecimal = renderTemplate("{{money(valor)}}", {
+      valor: "87.05",
+    });
+    expect(dotDecimal).toBe("R$\u00a087,05");
+  });
+
+  it("render ifValue condition without leaving text when value is empty", () => {
+    const withValue = renderTemplate('{{ifValue("Total: ",valor)}}', {
+      valor: "150",
+    });
+    expect(withValue).toBe("Total: ");
+
+    const withoutValue = renderTemplate('{{ifValue("Total: ",valor)}}', {
+      valor: "",
+    });
+    expect(withoutValue).toBe("");
+
+    const withOnlySpaces = renderTemplate('{{ifValue("Total: ",valor)}}', {
+      valor: "   ",
+    });
+    expect(withOnlySpaces).toBe("");
+
+    const withX = renderTemplate('{{ifValue("Total: ",valor)}}', {
+      valor: "x",
+    });
+    expect(withX).toBe("");
+
+    const withUpperX = renderTemplate('{{ifValue("Total: ",valor)}}', {
+      valor: " X ",
+    });
+    expect(withUpperX).toBe("");
+  });
+
+  it("allow nested function inside ifValue", () => {
+    const out = renderTemplate('{{ifValue("Imposto: ",money(imposto))}}', {
+      imposto: "10,5",
+    });
+    expect(out).toBe("Imposto: ");
+  });
+
   it("validate template fields against headers", () => {
-    const valid = validateTemplateFields("{{nome}} {{money(valor)}}", [
-      "nome",
-      "valor",
-    ]);
+    const valid = validateTemplateFields(
+      '{{nome}} {{money(valor)}} {{ifValue("Total: ",money(valor))}}',
+      ["nome", "valor"],
+    );
     expect(valid.valid).toBe(true);
 
-    const invalid = validateTemplateFields("{{nome}} {{money(cpf)}}", [
-      "nome",
-      "email",
-    ]);
+    const invalid = validateTemplateFields(
+      '{{nome}} {{ifValue("Total: ",money(cpf))}}',
+      ["nome", "email"],
+    );
     expect(invalid.valid).toBe(false);
     if (!invalid.valid) {
       expect(invalid.invalidFields).toEqual(["cpf"]);

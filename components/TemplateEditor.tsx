@@ -61,7 +61,9 @@ export function TemplateEditor({
     insertSnippet(`{{${field}}}`);
   }
 
-  function applyFunctionOnSelection(functionName: "money" | "upper" | "lower") {
+  function applyFunctionOnSelection(
+    functionName: "money" | "upper" | "lower" | "ifValue",
+  ) {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -70,6 +72,10 @@ export function TemplateEditor({
     const hasSelection = end > start;
 
     if (!hasSelection) {
+      if (functionName === "ifValue") {
+        insertSnippet(`{{ifValue("Texto: ",${sampleField})}}`);
+        return;
+      }
       insertSnippet(`{{${functionName}(${sampleField})}}`);
       return;
     }
@@ -78,7 +84,10 @@ export function TemplateEditor({
     const field = normalizeSelectionToField(selectedText);
     if (!field) return;
 
-    const replacement = `{{${functionName}(${field})}}`;
+    const replacement =
+      functionName === "ifValue"
+        ? `{{ifValue("Texto: ",${field})}}`
+        : `{{${functionName}(${field})}}`;
     const next = template.slice(0, start) + replacement + template.slice(end);
     onTemplateChange(next);
 
@@ -96,7 +105,8 @@ export function TemplateEditor({
       <h2>2. Template</h2>
       <p className="muted">
         Use sintaxe simples <code>{"{{campo}}"}</code> ou funcoes como{" "}
-        <code>{"{{money(campo)}}"}</code>.
+        <code>{"{{money(campo)}}"}</code> e{" "}
+        <code>{'{{ifValue("Texto opcional",campo)}}'}</code>.
       </p>
 
       <div className="field-list">
@@ -139,10 +149,18 @@ export function TemplateEditor({
           >
             lower
           </button>
+          <button
+            type="button"
+            className="chip chip-action"
+            onClick={() => applyFunctionOnSelection("ifValue")}
+          >
+            ifValue
+          </button>
         </div>
         <p className="muted">
           Dica: selecione um campo ja inserido (ex: <code>{"{{valor}}"}</code>) e
-          clique em uma funcao.
+          clique em uma funcao. No <code>ifValue</code>, o texto aparece sem
+          imprimir o valor da celula.
         </p>
       </div>
 

@@ -1,24 +1,119 @@
 const TOKEN_REGEX = /{{(.*?)}}/g;
-const FUNCTION_REGEX = /^([a-zA-Z_][a-zA-Z0-9_]*)\((.*?)\)$/;
+const FUNCTION_REGEX = /^([a-zA-Z_][a-zA-Z0-9_]*)\(([\s\S]*)\)$/;
 
 type TemplateFunction = (value: string) => string;
 
-function parsePtBrNumber(value: string): number | null {
-  const normalized = value
+function splitFunctionArgs(rawArgs: string): string[] {
+  const args: string[] = [];
+  let current = "";
+  let quote: '"' | "'" | null = null;
+  let escaped = false;
+  let parenDepth = 0;
+
+  for (const char of rawArgs) {
+    if (escaped) {
+      current += char;
+      escaped = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      current += char;
+      escaped = true;
+      continue;
+    }
+
+    if (quote) {
+      current += char;
+      if (char === quote) {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      quote = char;
+      current += char;
+      continue;
+    }
+
+    if (char === "(") {
+      parenDepth += 1;
+      current += char;
+      continue;
+    }
+
+    if (char === ")") {
+      parenDepth = Math.max(0, parenDepth - 1);
+      current += char;
+      continue;
+    }
+
+    if (char === "," && parenDepth === 0) {
+      args.push(current.trim());
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  const last = current.trim();
+  if (last) {
+    args.push(last);
+  }
+
+  return args;
+}
+
+function parseFunctionCall(expression: string): { name: string; args: string[] } | null {
+  const match = expression.trim().match(FUNCTION_REGEX);
+  if (!match) return null;
+
+  const name = match[1];
+  const args = splitFunctionArgs(match[2] ?? "");
+  return { name, args };
+}
+
+function parseCurrencyNumber(value: string): number | null {
+  const sanitized = value
     .trim()
     .replaceAll("R$", "")
-    .replaceAll(" ", "")
-    .replaceAll(".", "")
-    .replace(",", ".");
+    .replace(/\s+/g, "");
 
-  if (!normalized) return null;
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : null;
+  if (!sanitized) return null;
+
+  const ptPattern = /^-?\d{1,3}(\.\d{3})*(,\d+)?$/;
+  const enPattern = /^-?\d{1,3}(,\d{3})*(\.\d+)?$/;
+  const plainPattern = /^-?\d+([.,]\d+)?$/;
+
+  if (ptPattern.test(sanitized)) {
+    const normalized = sanitized.replaceAll(".", "").replace(",", ".");
+    const parsed = Number.parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  if (enPattern.test(sanitized)) {
+    const normalized = sanitized.replaceAll(",", "");
+    const parsed = Number.parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  if (plainPattern.test(sanitized)) {
+    const normalized = sanitized.includes(",")
+      ? sanitized.replace(",", ".")
+      : sanitized;
+    const parsed = Number.parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
 }
 
 function formatMoney(value: string): string {
-  const number = parsePtBrNumber(value);
+  const number = parseCurrencyNumber(value);
   if (number === null) return "";
+  // Intl is the native JS API for locale-aware currency formatting.
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -31,45 +126,81 @@ const TEMPLATE_FUNCTIONS: Record<string, TemplateFunction> = {
   lower: (value) => value.toLowerCase(),
 };
 
-function extractFieldFromExpression(expression: string): string | null {
-  const trimmed = expression.trim();
-  if (!trimmed) return null;
+function parseTextLiteral(arg: string): string {
+  const trimmed = arg.trim();
+  const match = trimmed.match(/^"(.*)"$/) ?? trimmed.match(/^'(.*)'$/);
+  if (!match) return trimmed;
 
-  const functionMatch = trimmed.match(FUNCTION_REGEX);
-  if (!functionMatch) {
-    return trimmed;
+  return match[1]
+    .replaceAll('\\"', '"')
+    .replaceAll("\\'", "'")
+    .replaceAll("\\n", "\n")
+    .replaceAll("\\t", "\t");
+}
+
+function isTextLiteral(expression: string): boolean {
+  const trimmed = expression.trim();
+  return /^"(.*)"$/.test(trimmed) || /^'(.*)'$/.test(trimmed);
+}
+
+function isEmptyLikeValue(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return normalized === "" || normalized === "x";
+}
+
+function extractFieldsFromExpression(expression: string): string[] {
+  const trimmed = expression.trim();
+  if (!trimmed) return [];
+
+  const functionCall = parseFunctionCall(trimmed);
+  if (!functionCall) {
+    if (isTextLiteral(trimmed)) return [];
+    return [trimmed];
   }
 
-  const argument = functionMatch[2]?.trim();
-  return argument || null;
+  if (functionCall.name === "ifValue") {
+    const valueArg = functionCall.args[1]?.trim();
+    return valueArg ? extractFieldsFromExpression(valueArg) : [];
+  }
+
+  return functionCall.args.flatMap((arg) => extractFieldsFromExpression(arg));
 }
 
 function evaluateExpression(expression: string, row: Record<string, string>): string {
   const trimmed = expression.trim();
   if (!trimmed) return "";
 
-  const functionMatch = trimmed.match(FUNCTION_REGEX);
-  if (!functionMatch) {
+  const functionCall = parseFunctionCall(trimmed);
+  if (!functionCall) {
+    if (isTextLiteral(trimmed)) return parseTextLiteral(trimmed);
     return row[trimmed] ?? "";
   }
 
-  const functionName = functionMatch[1];
-  const argument = functionMatch[2]?.trim();
-  if (!argument) return "";
+  if (functionCall.name === "ifValue") {
+    const textArg = functionCall.args[0] ?? "";
+    const valueArg = functionCall.args[1] ?? "";
+    const value = evaluateExpression(valueArg, row);
+    if (isEmptyLikeValue(value)) return "";
+    return parseTextLiteral(textArg);
+  }
 
-  const fn = TEMPLATE_FUNCTIONS[functionName];
+  const fn = TEMPLATE_FUNCTIONS[functionCall.name];
   if (!fn) return "";
 
-  return fn(row[argument] ?? "");
+  const valueArg = functionCall.args[0] ?? "";
+  const value = evaluateExpression(valueArg, row);
+  return fn(value);
 }
 
 export function extractTemplateFields(template: string): string[] {
   const fields = new Set<string>();
   for (const match of template.matchAll(TOKEN_REGEX)) {
     const expression = match[1] ?? "";
-    const field = extractFieldFromExpression(expression);
-    if (field) {
-      fields.add(field);
+    const expressionFields = extractFieldsFromExpression(expression);
+    for (const field of expressionFields) {
+      if (field) {
+        fields.add(field);
+      }
     }
   }
   return [...fields];
