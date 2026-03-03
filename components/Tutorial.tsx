@@ -23,6 +23,48 @@ export function Tutorial() {
           <li>Clique em &quot;Gerar textos&quot;.</li>
           <li>Use o botao &quot;Copiar&quot; em cada card.</li>
         </ol>
+
+        <h3>Funcoes do template</h3>
+        <ul>
+          <li>
+            <code>{`{{campo}}`}</code>: insere o valor bruto da coluna.
+            Exemplo: template <code>{`{{nome}}`}</code>, valor <code>Ana</code>,
+            saida <code>Ana</code>.
+          </li>
+          <li>
+            <code>{`{{money(campo)}}`}</code>: formata o valor como moeda BRL.
+            Exemplo: template <code>{`{{money(valor)}}`}</code>, valor{" "}
+            <code>87,05</code>, saida <code>R$ 87,05</code>.
+          </li>
+          <li>
+            <code>{`{{upper(campo)}}`}</code>: converte o valor para maiusculo.
+            Exemplo: template <code>{`{{upper(nome)}}`}</code>, valor{" "}
+            <code>ana</code>, saida <code>ANA</code>.
+          </li>
+          <li>
+            <code>{`{{lower(campo)}}`}</code>: converte o valor para minusculo.
+            Exemplo: template <code>{`{{lower(nome)}}`}</code>, valor{" "}
+            <code>ANA</code>, saida <code>ana</code>.
+          </li>
+          <li>
+            <code>{`{{ifValue("Texto",campo)}}`}</code>: exibe apenas o texto
+            quando o campo tem valor.
+            Exemplo: template <code>{`{{ifValue("Tem imposto",imposto)}}`}</code>,
+            com <code>imposto=10</code> saida <code>Tem imposto</code>; com{" "}
+            <code>imposto=&quot;&quot;</code> saida vazia.
+          </li>
+          <li>
+            <code>{`{{clearLine(campo)}}`}</code> /{" "}
+            <code>{`{{cleanLine(campo)}}`}</code>: remove a linha quando o campo
+            estiver vazio.
+            Exemplo: linha <code>{`Imposto: {{clearLine(imposto)}}`}</code>; com{" "}
+            <code>imposto=10</code> vira <code>Imposto: </code>; com{" "}
+            <code>imposto=&quot;&quot;</code> a linha e removida.
+          </li>
+        </ul>
+        <p className="muted">
+          Regra de vazio: valor em branco, apenas espacos ou <code>x</code>.
+        </p>
       </details>
     </section>
   );
