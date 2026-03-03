@@ -62,7 +62,7 @@ export function TemplateEditor({
   }
 
   function applyFunctionOnSelection(
-    functionName: "money" | "upper" | "lower" | "ifValue",
+    functionName: "money" | "upper" | "lower" | "ifValue" | "clearLine",
   ) {
     const textarea = textareaRef.current;
     if (!textarea) return;
@@ -76,6 +76,10 @@ export function TemplateEditor({
         insertSnippet(`{{ifValue("Texto: ",${sampleField})}}`);
         return;
       }
+      if (functionName === "clearLine") {
+        insertSnippet(`{{clearLine(${sampleField})}}`);
+        return;
+      }
       insertSnippet(`{{${functionName}(${sampleField})}}`);
       return;
     }
@@ -87,6 +91,8 @@ export function TemplateEditor({
     const replacement =
       functionName === "ifValue"
         ? `{{ifValue("Texto: ",${field})}}`
+        : functionName === "clearLine"
+          ? `{{clearLine(${field})}}`
         : `{{${functionName}(${field})}}`;
     const next = template.slice(0, start) + replacement + template.slice(end);
     onTemplateChange(next);
@@ -106,7 +112,8 @@ export function TemplateEditor({
       <p className="muted">
         Use sintaxe simples <code>{"{{campo}}"}</code> ou funcoes como{" "}
         <code>{"{{money(campo)}}"}</code> e{" "}
-        <code>{'{{ifValue("Texto opcional",campo)}}'}</code>.
+        <code>{'{{ifValue("Texto opcional",campo)}}'}</code> e{" "}
+        <code>{"{{clearLine(campo)}}"}</code>.
       </p>
 
       <div className="field-list">
@@ -156,11 +163,19 @@ export function TemplateEditor({
           >
             ifValue
           </button>
+          <button
+            type="button"
+            className="chip chip-action"
+            onClick={() => applyFunctionOnSelection("clearLine")}
+          >
+            clearLine
+          </button>
         </div>
         <p className="muted">
           Dica: selecione um campo ja inserido (ex: <code>{"{{valor}}"}</code>) e
           clique em uma funcao. No <code>ifValue</code>, o texto aparece sem
-          imprimir o valor da celula.
+          imprimir o valor da celula. No <code>clearLine</code>, a linha inteira
+          e removida quando o valor estiver vazio.
         </p>
       </div>
 

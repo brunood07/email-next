@@ -73,9 +73,30 @@ describe("templateEngine", () => {
     expect(out).toBe("Imposto: ");
   });
 
+  it("remove entire line when clearLine receives empty value", () => {
+    const withValue = renderTemplate(
+      "Cliente: {{nome}}\nImposto: {{clearLine(money(imposto))}}",
+      {
+        nome: "Ana",
+        imposto: "10,5",
+      },
+    );
+    expect(withValue).toContain("Cliente: Ana");
+    expect(withValue).toContain("Imposto:");
+
+    const withoutValue = renderTemplate(
+      "Cliente: {{nome}}\nImposto: {{clearLine(money(imposto))}}",
+      {
+        nome: "Ana",
+        imposto: "x",
+      },
+    );
+    expect(withoutValue).toBe("Cliente: Ana");
+  });
+
   it("validate template fields against headers", () => {
     const valid = validateTemplateFields(
-      '{{nome}} {{money(valor)}} {{ifValue("Total: ",money(valor))}}',
+      '{{nome}} {{money(valor)}} {{ifValue("Total: ",money(valor))}} {{clearLine(money(valor))}}',
       ["nome", "valor"],
     );
     expect(valid.valid).toBe(true);

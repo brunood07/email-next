@@ -1,5 +1,6 @@
 const TOKEN_REGEX = /{{(.*?)}}/g;
 const FUNCTION_REGEX = /^([a-zA-Z_][a-zA-Z0-9_]*)\(([\s\S]*)\)$/;
+const CLEAR_LINE_MARKER = "__TPL_CLEAR_LINE__";
 
 type TemplateFunction = (value: string) => string;
 
@@ -163,6 +164,11 @@ function extractFieldsFromExpression(expression: string): string[] {
     return valueArg ? extractFieldsFromExpression(valueArg) : [];
   }
 
+  if (functionCall.name === "clearLine") {
+    const valueArg = functionCall.args[0]?.trim();
+    return valueArg ? extractFieldsFromExpression(valueArg) : [];
+  }
+
   return functionCall.args.flatMap((arg) => extractFieldsFromExpression(arg));
 }
 
@@ -182,6 +188,13 @@ function evaluateExpression(expression: string, row: Record<string, string>): st
     const value = evaluateExpression(valueArg, row);
     if (isEmptyLikeValue(value)) return "";
     return parseTextLiteral(textArg);
+  }
+
+  if (functionCall.name === "clearLine") {
+    const valueArg = functionCall.args[0] ?? "";
+    const value = evaluateExpression(valueArg, row);
+    if (isEmptyLikeValue(value)) return CLEAR_LINE_MARKER;
+    return value;
   }
 
   const fn = TEMPLATE_FUNCTIONS[functionCall.name];
@@ -224,7 +237,13 @@ export function renderTemplate(
   template: string,
   row: Record<string, string>,
 ): string {
-  return template.replace(TOKEN_REGEX, (_match, expression: string) => {
+  const rendered = template.replace(TOKEN_REGEX, (_match, expression: string) => {
     return evaluateExpression(expression, row);
   });
+
+  return rendered
+    .split(/\r?\n/)
+    .filter((line) => !line.includes(CLEAR_LINE_MARKER))
+    .join("\n")
+    .replaceAll(CLEAR_LINE_MARKER, "");
 }

@@ -15,6 +15,10 @@ export function Tutorial() {
             Para condicional de texto, use {`{{ifValue("Tem imposto",imposto)}}`}:
             mostra apenas o texto quando o campo tiver valor.
           </li>
+          <li>
+            Para remover a linha inteira, use {`{{clearLine(imposto)}}`} no lugar
+            do valor da linha.
+          </li>
           <li>Clique em &quot;Gerar textos&quot;.</li>
           <li>Use o botao &quot;Copiar&quot; em cada card.</li>
         </ol>
