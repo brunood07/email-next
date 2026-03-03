@@ -2,16 +2,16 @@
 
 export function Tutorial() {
   return (
-    <section className="panel">
+    <section className="panel tutorial">
       <h2>Como usar</h2>
       <details>
-        <summary>Abrir tutorial</summary>
+        <summary>Abrir tutorial rapido</summary>
         <ol>
-          <li>Faça upload do seu arquivo CSV ou XLSX.</li>
+          <li>Faca upload do seu arquivo CSV ou XLSX.</li>
           <li>A primeira linha deve conter os nomes das colunas.</li>
           <li>Use {`{{nome_coluna}}`} para inserir valores no template.</li>
           <li>Clique em &quot;Gerar textos&quot;.</li>
-          <li>Use o botão &quot;Copiar&quot; em cada card.</li>
+          <li>Use o botao &quot;Copiar&quot; em cada card.</li>
         </ol>
       </details>
     </section>

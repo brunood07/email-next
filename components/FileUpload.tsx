@@ -46,18 +46,19 @@ export function FileUpload({ onSuccess, onError }: FileUploadProps) {
   }
 
   return (
-    <form className="panel" onSubmit={handleSubmit}>
+    <form className="panel panel-upload" onSubmit={handleSubmit}>
       <h2>1. Upload do arquivo</h2>
       <p className="muted">
         Tipos permitidos: <code>.csv</code> e <code>.xlsx</code>. Tamanho
-        máximo: 5MB.
+        maximo: 5MB.
       </p>
       <input
+        className="file-input"
         type="file"
         accept=".csv,.xlsx"
         onChange={(event) => setFile(event.target.files?.[0] ?? null)}
       />
-      <button type="submit" disabled={isSubmitting}>
+      <button className="btn btn-primary full" type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Processando..." : "Enviar arquivo"}
       </button>
     </form>

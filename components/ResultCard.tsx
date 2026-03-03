@@ -25,12 +25,12 @@ export function ResultCard({ label, text, onCopied }: ResultCardProps) {
 
   return (
     <article className="result-card">
-      <header>
+      <header className="result-header">
         <strong>{label}</strong>
       </header>
       <p>{text}</p>
-      <button type="button" onClick={handleCopy}>
-        {copied ? "Copiado! ✓" : "Copiar"}
+      <button className="btn btn-secondary full" type="button" onClick={handleCopy}>
+        {copied ? "Copiado! OK" : "Copiar"}
       </button>
     </article>
   );

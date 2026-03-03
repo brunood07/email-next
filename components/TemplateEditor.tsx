@@ -47,13 +47,13 @@ export function TemplateEditor({
       </p>
 
       <div className="field-list">
-        <strong>Campos disponíveis:</strong>
+        <strong>Campos disponiveis:</strong>
         <div className="chips">
           {headers.map((header) => (
             <button
               key={header}
               type="button"
-              className="chip"
+              className="chip chip-action"
               onClick={() => insertField(header)}
             >
               {header}
@@ -63,16 +63,17 @@ export function TemplateEditor({
       </div>
 
       <textarea
+        className="template-input"
         ref={textareaRef}
         value={template}
         onChange={(event) => onTemplateChange(event.target.value)}
         rows={8}
-        placeholder="Olá {{nome}}, seu pedido {{pedido}} foi aprovado!"
+        placeholder="Ola {{nome}}, seu pedido {{pedido}} foi aprovado!"
       />
 
       <div className="preview">
-        <strong>Preview (primeira linha):</strong>
-        <p>{preview}</p>
+        <strong>Preview (primeira linha)</strong>
+        <p>{preview || "Digite o template para ver o preview."}</p>
       </div>
     </section>
   );

@@ -1,14 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FileUpload } from "@/components/FileUpload";
 import { ResultCard } from "@/components/ResultCard";
 import { TemplateEditor } from "@/components/TemplateEditor";
 import { Tutorial } from "@/components/Tutorial";
-import {
-  renderTemplate,
-  validateTemplateFields,
-} from "@/lib/templateEngine";
+import { renderTemplate, validateTemplateFields } from "@/lib/templateEngine";
 import { AppState, UploadedData } from "@/types/upload";
 
 const PAGE_SIZE = 50;
@@ -62,6 +59,12 @@ export default function HomePage() {
   const [toast, setToast] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(timeout);
+  }, [toast]);
 
   const preview = useMemo(() => {
     if (!data || !data.rows[0] || template.trim().length === 0) return "";
@@ -122,8 +125,22 @@ export default function HomePage() {
 
   return (
     <main className="container">
-      <h1>Gerador de Textos em Lote</h1>
-      <p className="muted">Fluxo: Upload → Colunas → Template → Preview → Gerar</p>
+      <header className="hero">
+        <p className="eyebrow">Template Studio</p>
+        <h1>Gerador de Textos em Lote</h1>
+        <p className="muted">
+          Fluxo: Upload - Colunas - Template - Preview - Gerar
+        </p>
+        <div className="status-row">
+          <span className="status-pill">Estado: {state}</span>
+          <span className="status-pill">
+            Linhas: {data ? data.rows.length.toString() : "0"}
+          </span>
+          <span className="status-pill">
+            Resultados: {results.length.toString()}
+          </span>
+        </div>
+      </header>
 
       {toast && <div className="toast">{toast}</div>}
 
@@ -156,7 +173,7 @@ export default function HomePage() {
                 </span>
               ))}
             </div>
-            <p className="muted">Linhas válidas: {data.rows.length}</p>
+            <p className="muted">Linhas validas: {data.rows.length}</p>
           </section>
 
           <TemplateEditor
@@ -170,8 +187,13 @@ export default function HomePage() {
             }}
           />
 
-          <section className="panel">
-            <button type="button" onClick={handleGenerate} disabled={isGenerating}>
+          <section className="panel action-panel">
+            <button
+              className="btn btn-primary full"
+              type="button"
+              onClick={handleGenerate}
+              disabled={isGenerating}
+            >
               {isGenerating ? "Gerando..." : "Gerar textos"}
             </button>
           </section>
@@ -188,7 +210,7 @@ export default function HomePage() {
         <section className="panel">
           <h2>Resultados</h2>
           <p className="muted">
-            Página {page} de {totalPages}
+            Pagina {page} de {totalPages}
           </p>
           <div className="result-grid">
             {paginated.map((result, index) => (
@@ -202,6 +224,7 @@ export default function HomePage() {
           </div>
           <div className="pagination">
             <button
+              className="btn btn-ghost"
               type="button"
               disabled={page <= 1}
               onClick={() => setPage((current) => Math.max(1, current - 1))}
@@ -209,13 +232,14 @@ export default function HomePage() {
               Anterior
             </button>
             <button
+              className="btn btn-ghost"
               type="button"
               disabled={page >= totalPages}
               onClick={() =>
                 setPage((current) => Math.min(totalPages, current + 1))
               }
             >
-              Próxima
+              Proxima
             </button>
           </div>
         </section>
