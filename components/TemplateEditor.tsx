@@ -174,8 +174,9 @@ export function TemplateEditor({
         <p className="muted">
           Dica: selecione um campo ja inserido (ex: <code>{"{{valor}}"}</code>) e
           clique em uma funcao. No <code>ifValue</code>, o texto aparece sem
-          imprimir o valor da celula. No <code>clearLine</code>, a linha inteira
-          e removida quando o valor estiver vazio.
+          imprimir o valor da celula. No <code>clearLine</code> /{" "}
+          <code>cleanLine</code>, o valor nao e impresso: a funcao apenas decide se
+          a linha sera removida quando estiver vazio.
         </p>
       </div>
 

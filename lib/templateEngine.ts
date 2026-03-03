@@ -164,7 +164,7 @@ function extractFieldsFromExpression(expression: string): string[] {
     return valueArg ? extractFieldsFromExpression(valueArg) : [];
   }
 
-  if (functionCall.name === "clearLine") {
+  if (functionCall.name === "clearLine" || functionCall.name === "cleanLine") {
     const valueArg = functionCall.args[0]?.trim();
     return valueArg ? extractFieldsFromExpression(valueArg) : [];
   }
@@ -190,11 +190,11 @@ function evaluateExpression(expression: string, row: Record<string, string>): st
     return parseTextLiteral(textArg);
   }
 
-  if (functionCall.name === "clearLine") {
+  if (functionCall.name === "clearLine" || functionCall.name === "cleanLine") {
     const valueArg = functionCall.args[0] ?? "";
     const value = evaluateExpression(valueArg, row);
     if (isEmptyLikeValue(value)) return CLEAR_LINE_MARKER;
-    return value;
+    return "";
   }
 
   const fn = TEMPLATE_FUNCTIONS[functionCall.name];

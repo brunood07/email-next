@@ -81,8 +81,7 @@ describe("templateEngine", () => {
         imposto: "10,5",
       },
     );
-    expect(withValue).toContain("Cliente: Ana");
-    expect(withValue).toContain("Imposto:");
+    expect(withValue).toBe("Cliente: Ana\nImposto: ");
 
     const withoutValue = renderTemplate(
       "Cliente: {{nome}}\nImposto: {{clearLine(money(imposto))}}",
@@ -94,9 +93,27 @@ describe("templateEngine", () => {
     expect(withoutValue).toBe("Cliente: Ana");
   });
 
+  it("support cleanLine alias with same behavior", () => {
+    const withValue = renderTemplate(
+      "Taxa: {{cleanLine(imposto)}}",
+      {
+        imposto: "1",
+      },
+    );
+    expect(withValue).toBe("Taxa: ");
+
+    const withoutValue = renderTemplate(
+      "Taxa: {{cleanLine(imposto)}}",
+      {
+        imposto: " ",
+      },
+    );
+    expect(withoutValue).toBe("");
+  });
+
   it("validate template fields against headers", () => {
     const valid = validateTemplateFields(
-      '{{nome}} {{money(valor)}} {{ifValue("Total: ",money(valor))}} {{clearLine(money(valor))}}',
+      '{{nome}} {{money(valor)}} {{ifValue("Total: ",money(valor))}} {{clearLine(money(valor))}} {{cleanLine(valor)}}',
       ["nome", "valor"],
     );
     expect(valid.valid).toBe(true);

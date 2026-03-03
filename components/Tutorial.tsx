@@ -17,7 +17,8 @@ export function Tutorial() {
           </li>
           <li>
             Para remover a linha inteira, use {`{{clearLine(imposto)}}`} no lugar
-            do valor da linha.
+            do valor da linha. Essa funcao nao imprime o valor, apenas valida se a
+            linha deve continuar.
           </li>
           <li>Clique em &quot;Gerar textos&quot;.</li>
           <li>Use o botao &quot;Copiar&quot; em cada card.</li>
